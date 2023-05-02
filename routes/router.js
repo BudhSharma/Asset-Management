@@ -58,6 +58,15 @@ router.post("/register", async (req, res) => {
     console.log("catch block error");
   }
 });
+
+router.get("/user-list", async (req, res) => {
+  try {
+    const list = await userdb.find();
+    return res.json(list);
+  } catch (error) {
+    res.status(401).json({ status: 401, error });
+  }
+});
 // admin Login=========================================
 
 // Define default admin credentials
@@ -499,7 +508,6 @@ router.post("/company", upload.single("file"), async (req, res) => {
       postal_code,
       timezone,
       curruncy_symbol,
-      date,
       financial_year,
     } = req.body;
 
@@ -517,7 +525,6 @@ router.post("/company", upload.single("file"), async (req, res) => {
       postal_code,
       timezone,
       curruncy_symbol,
-      date,
       financial_year,
       path,
       mimetype,
@@ -658,7 +665,6 @@ router.post("/asset", upload.single("file"), async (req, res) => {
       os_version,
       hard_disk,
       hard_disk_type,
-      owner,
       mouse,
       mouse_brand,
       keyboard,
@@ -699,7 +705,6 @@ router.post("/asset", upload.single("file"), async (req, res) => {
       os_version,
       hard_disk,
       hard_disk_type,
-      owner,
       mouse,
       mouse_brand,
       keyboard,
@@ -812,7 +817,6 @@ router.delete("/asset-data/:id", async (req, res) => {
       os_version: originalData.os_version,
       hard_disk: originalData.hard_disk,
       hard_disk_type: originalData.hard_disk_type,
-      owner: originalData.owner,
       mouse: originalData.mouse,
       mouse_brand: originalData.mouse_brand,
       keyboard: originalData.keyboard,

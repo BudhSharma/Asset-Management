@@ -84,9 +84,6 @@ const asset = new mongoose.Schema(
     hard_disk_type: {
       type: String,
     },
-    owner: {
-      type: String,
-    },
     mouse: {
       type: String,
     },

@@ -34,10 +34,6 @@ const fileSchema = new mongoose.Schema(
       type: String,
       require: true,
     },
-    date: {
-      type: String,
-      require: true,
-    },
     financial_year: {
       type: String,
       require: true,
