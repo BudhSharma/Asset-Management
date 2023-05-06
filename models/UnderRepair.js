@@ -2,9 +2,6 @@ const mongoose = require("mongoose");
 
 const asset = new mongoose.Schema(
   {
-    status: {
-      type: String,
-    },
     checkIn: {
       type: String,
     },
@@ -102,6 +99,6 @@ const asset = new mongoose.Schema(
   },
   { timestamps: true }
 );
-const Asset = mongoose.model("Asset", asset);
+const UnderRepair = mongoose.model("UnderRepair", asset);
 
-module.exports = Asset;
+module.exports = UnderRepair;

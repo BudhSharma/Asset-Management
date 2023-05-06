@@ -634,11 +634,72 @@ router.delete("/employee/:id", async (req, res) => {
 
 const Asset = require("../models/Asset");
 
+const MongoClient = require("mongodb").MongoClient;
+
+const url =
+  "mongodb+srv://HemantSharma:Hemant123@cluster0.g7iydvj.mongodb.net/adminDB?retryWrites=true&w=majority";
+const dbName = "adminDB";
+
+// Define route to calculate asset cost for a specific year
+router.get("/asset-cost/:year", async (req, res) => {
+  try {
+    // Parse the year parameter from the request URL
+    const year = parseInt(req.params.year);
+
+    // Calculate the start and end dates for the selected year and the following year
+    const startDate = new Date(year, 0, 1); // January 1st of the selected year
+    const endDate = new Date(year + 1, 0, 1); // January 1st of the following year
+
+    // Connect to MongoDB database
+    const client = await MongoClient.connect(url, { useNewUrlParser: true });
+    const db = client.db(dbName);
+
+    // Retrieve all assets that were purchased between the start and end dates
+    const assets = await Asset.find({
+      createdAt: {
+        $gte: startDate,
+        $lt: endDate,
+      },
+    });
+
+    // Calculate total depreciation for all assets over the selected year and the following year
+    let totalCost = 0;
+    assets.forEach((asset) => {
+      // Calculate the number of days that the asset was owned during the selected year and the following year
+      const daysOwned = Math.min(
+        365,
+        (asset.createdAt.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
+      );
+      const remainingDays = 365 - daysOwned;
+
+      const totalAmount = parseInt(asset.cost);
+
+      // Calculate the total depreciation for the selected year and the following year
+      const dailyDepreciation = totalAmount / 365;
+      const selectedYearDepreciation = dailyDepreciation * daysOwned;
+      const followingYearDepreciation = dailyDepreciation * remainingDays;
+
+      // Add up the total depreciation for all assets over the selected year and the following year
+      totalCost += selectedYearDepreciation + followingYearDepreciation;
+    });
+
+    // Send total cost of assets as response
+    res.status(201).json({ year, totalCost });
+
+    // Close MongoDB connection
+    client.close();
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal server error");
+  }
+});
+
 router.post("/asset", upload.single("file"), async (req, res) => {
   try {
     const path = req.file.path;
     const mimetype = req.file.mimetype;
     const {
+      status,
       checkOut,
       checkIn,
       disposed,
@@ -677,6 +738,7 @@ router.post("/asset", upload.single("file"), async (req, res) => {
     }
 
     const asset = new Asset({
+      status,
       checkOut,
       checkIn,
       disposed,
@@ -879,6 +941,62 @@ router.patch("/disposed-asset/:id", async (req, res) => {
     res.status(201).json(asset);
   } catch (error) {
     res.status(422).json(error);
+  }
+});
+
+// Under Repair Section of Route
+const UnderRepair = require("../models/UnderRepair");
+const { Console } = require("console");
+
+router.post("/under-repair/:id", async (req, res) => {
+  try {
+    const originalData = await Asset.findByIdAndUpdate({ _id: req.params.id });
+
+    // create an instance of the new data
+    const newData = new UnderRepair({
+      checkOut: originalData.checkOut,
+      checkIn: originalData.checkIn,
+      disposed: originalData.disposed,
+      path: originalData.path,
+      mimetype: originalData.mimetype,
+      assetId: originalData.assetId,
+      purchased_from: originalData.purchased_from,
+      purchased_date: originalData.purchased_date,
+      description: originalData.description,
+      serial_no: originalData.serial_no,
+      employee_code: originalData.employee_code,
+      brand: originalData.brand,
+      organization: originalData.organization,
+      cost: originalData.cost,
+      asset_type: originalData.asset_type,
+      department: originalData.department,
+      employee_name: originalData.employee_name,
+
+      processor: originalData.processor,
+      processor_gen: originalData.processor_gen,
+      ram: originalData.ram,
+      ram_type: originalData.ram_type,
+      ram_slot1: originalData.ram_slot1,
+      ram_slot2: originalData.ram_slot2,
+      location: originalData.location,
+      os_version: originalData.os_version,
+      hard_disk: originalData.hard_disk,
+      hard_disk_type: originalData.hard_disk_type,
+      mouse: originalData.mouse,
+      mouse_brand: originalData.mouse_brand,
+      keyboard: originalData.keyboard,
+      charger: originalData.charger,
+    });
+
+    // save the new data to the other table
+    const saveData = await newData.save();
+
+    res
+      .status(200)
+      .json({ message: "Data deleted and saved to other table.", saveData });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error." });
   }
 });
 
